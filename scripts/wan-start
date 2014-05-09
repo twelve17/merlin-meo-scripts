@@ -34,7 +34,7 @@ update_dynamic_dns () {
 start_igmp_proxy () {
   if [ `ps | grep 'igmpproxy' | grep $config_file | wc -l` -eq 0 ]; then
     logger "$0: starting igmp proxy"
-    local_command igmpproxy "igmpproxy -d -v $CUSTOM_CONFIG_DIR/meo-config-igmp"
+    local_command 'igmpproxy' "igmpproxy -d -v $CUSTOM_CONFIG_DIR/meo-config-igmp"
     return $?
   else
     logger "$0: igmpproxy already running"
@@ -50,7 +50,7 @@ configure_vlan () {
   local script=$CUSTOM_SCRIPT_DIR/meo-post-dhcp-vlan-config 
   if [ -f "$script" ]; then
     logger "$0: kicking off vlan config"
-    local_command udhcpc "udhcpc -i $VLAN_IFACE -p /var/run/udhcpc0.pid -V $VLAN_VENDOR_CLASS -s $script"
+    local_command 'udhcpc' "udhcpc -i $VLAN_IFACE -p /var/run/udhcpc0.pid -V $VLAN_VENDOR_CLASS -s $script"
     return $?
   else
     logger "$0: WARNING: script not found: $script"
