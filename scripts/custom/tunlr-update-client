@@ -1,0 +1,7 @@
+#!/bin/sh
+
+source /jffs/scripts/custom/_net_functions
+init_config
+
+tunlr_server_command $TUNLR_REMOTE_COMMAND client
+

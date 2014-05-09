@@ -1,0 +1,86 @@
+
+#-----------------------------------------------------------------------------------------
+init_config () {
+
+  local config_file="/jffs/configs/custom/_net_config"
+
+  if [ ! -f "$config_file" ]; then 
+    echo "Missing net config file: $config_file"
+    exit 1
+  else
+    source $config_file
+  fi
+    
+  # This only exists after the meo-post-dhcp-vlan-config has gotten an IP
+  [ -f "$VLAN_IP_FILE" ] && VLAN_IP=`cat $VLAN_IP_FILE`
+}
+      
+#-----------------------------------------------------------------------------------------
+# Run a command and log the response code and (massaged) output
+#-----------------------------------------------------------------------------------------
+local_command () {
+  local description=$1
+  shift
+  logger "$description: running command: $@"
+  local output=`$@`
+  
+  local old_ifs=$IFS
+  local ifs2="
+"
+  IFS=$ifs2
+  
+  local parsed_output=""
+  for item in $output; do 
+    parsed_output="$parsed_output | $item"
+  done
+  
+  IFS=$old_ifs
+  
+  local rcode=$?
+  logger "$description result code: $rcode, output: $parsed_output"
+  return $rcode
+}
+
+#-----------------------------------------------------------------------------------------
+# http://www.casarini.org/blog/2011/adding-delay-to-c-port-knocking-client/
+# I noticed knocks were getting to the other end in the wrong order as well,
+# perhaps because they're going across a long distance. :)
+#-----------------------------------------------------------------------------------------
+knock_server () {
+  local server=$1
+  local port_seq=$2
+  for port in $port_seq; do
+    local_command 'knock' knock $server $port
+    res=$?
+    if [ "$res" != "0" ]; then
+       return $res
+    fi
+    sleep 1
+  done
+  return 0
+}
+
+#-----------------------------------------------------------------------------------------
+tunlr_server_command () {
+  knock_server $TUNLR_SERVER_HOST "$TUNLR_SERVER_KNOCK_SEQ" && \
+    local_command 'tunlr_server' "ssh -y -i $TUNLR_SERVER_KEY_FILE -l $TUNLR_SERVER_LOGIN $TUNLR_SERVER_HOST sudo $@"
+  return $?
+}
+
+#-----------------------------------------------------------------------------------------
+has_rule () {
+  local rule_net=$1
+  local table_name=$2
+  
+  local table_arg=""
+  if [ -z "$table_name" ]; then
+    table_arg="--table $table_name"
+  fi
+  
+  if [ `iptables -L $table_arg -n | grep $rule_net | wc -l` -eq 0  ]; then
+    return 1 # doesn't have rule, return false
+  else
+    return 0 # has rule, return true
+  fi
+}
+

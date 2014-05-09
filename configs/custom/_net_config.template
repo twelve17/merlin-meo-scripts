@@ -1,0 +1,75 @@
+# This is the master configuration file.  I try to keep all the interesting 
+# config in here instead of spread out everywhere.  Scripts that want to use 
+# this can just source this file, or can source the _network_config script 
+# and call "init_config".
+#
+# If you are looking at _network_config.template, you should copy this file 
+# to _network_config and fill in values appropriate to your configuration.
+
+# Where the custom configs and scripts live
+CUSTOM_CONFIG_DIR="/jffs/configs/custom"
+CUSTOM_SCRIPT_DIR="/jffs/scripts/custom"
+
+#-----------------------------------------------------------------------------
+# Router's Private LAN Configuration 
+#-----------------------------------------------------------------------------
+LAN_NET="192.168.1.0/24" # default value. change this if you changed your network
+LAN_IP=$(nvram get lan_ipaddr)
+LAN_IFACE=$(nvram get wl0_ifname) # default=eth1 (wired network)
+WLAN_IFACE=$(nvram get wl1_ifname) # default=eth2 (wireless network)
+LAN_BR=$(nvram get lan_ifname) # default=br0
+
+#-----------------------------------------------------------------------------
+# MEO ISP Configuration 
+#-----------------------------------------------------------------------------
+VLAN_IFACE="vlan12" # vlan for the MEO IPTV and VoIP
+VLAN_VENDOR_CLASS="2WHPL" # required for the MEO vlan DHCP server
+
+# This file is written by the meo_post-dhcp-vlan-config script when the udhcp 
+# client has gottan an IP address from the MEO vlan DHCP server.
+# It is needed at least by the nat-start script.
+VLAN_IP_FILE="/tmp/vlan_ip"
+
+#-----------------------------------------------------------------------------
+# Tunlr-Clone Configuration
+# https://github.com/corporate-gadfly/Tunlr-Clone
+# 
+# There are a few functions for interacting with a home made tunrl-clone 
+# server.
+#
+# 1. The wan-start script, upon receiving an new WAN IP, will connect to the 
+# tunlr server to update DNS, firewall, etc, to allow requests from the new 
+# IP address.
+# 
+# 2. The custom/tunlr-update-providers script can connect to the tunlr 
+# server to generate new BIND and Sniproxy configurations with the given 
+# provider domains.
+#
+# A custom script are run on the tunlr server to accomplish the above two 
+# tasks.  See: tunlr-utils (TODO).
+#
+# This Tunlr server uses port knocking with an automatic timeout:
+# https://www.digitalocean.com/community/articles/how-to-use-port-knocking-to-hide-your-ssh-daemon-from-attackers-on-ubuntu
+#-----------------------------------------------------------------------------
+TUNLR_SERVER_HOST="foo.example.com"
+TUNLR_SERVER_IP="x.x.x.x" # used for dnsmasq, hence IP not host
+TUNLR_SERVER_LOGIN="foo_user"
+TUNLR_SERVER_KNOCK_SEQ="1111 2222 3333 4444 5555"
+TUNLR_SERVER_KEY_FILE="$CUSTOM_CONFIG_DIR/ssh/id_rsa_foo"
+TUNLR_REMOTE_COMMAND="/opt/tunlr-utils/bin/tunlr-config.rb"
+
+TUNLR_HOSTS_FILE="$CUSTOM_CONFIG_DIR/tunlr-providers"
+TUNLR_DNSMASQ_TEMPLATE_FILE="$CUSTOM_CONFIG_DIR/dnsmasq.conf.add.template"
+TUNLR_DNSMASQ_DEST_FILE="/jffs/configs/dnsmasq.conf.add"
+
+#-----------------------------------------------------------------------------
+# Client settings for dnsmadeeasy.com. There is no intention by the Merlin 
+# author to add support for other DDNS providers, so we gotta do it via user 
+# scripts.
+# https://github.com/RMerl/asuswrt-merlin/issues/200
+#-----------------------------------------------------------------------------
+WAN_IP_ADDRESS=$(nvram get wan0_ipaddr)
+DYNDNS_ID="1111111"
+DYNDNS_PASSWORD="1111111"
+DYNDNS_URL="http://www.dnsmadeeasy.com/servlet/updateip?id=$DYNDNS_ID&password=$DYNDNS_PASSWORD&ip=$WAN_IP_ADDRESS"
+

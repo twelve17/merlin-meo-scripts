@@ -1,0 +1,53 @@
+#!/bin/sh
+
+##-----------------------------------------------------------------------------
+#get_vlan_ip () {
+#  if [ -f "$vlan_ip_file" ]; then
+#    VLAN_IP=`cat $vlan_ip_file`
+##  res=`ip -o  addr show $VLAN_IFACE | sed -n 's|.\+ inet \([[:digit:]]\+\.[[:digit:]]\+\.[[:digit:]]\+\.[[:digit:]]\+\)/[[:digit:]]\+ .\+|\1|p'`
+#  #if [ -n "$res" ]; then 
+#  #  VLAN_IP=$res
+#    return 0
+#  else
+#    return 1
+#  fi
+#}
+
+#-----------------------------------------------------------------------------
+configure_meo_rules () {
+
+  # Sometimes nat-start is called before the VLAN dhcp server script.  In
+  # these cases, just bail.
+  [ -n "$VLAN_IP" ] || return 1
+
+  # These are the networks whose packets we want to ROUTE OUT of our LOCAL network to the VLAN
+  # The original router doesn't seem to give access to 10.x networks in its config, so they
+  # are being excluded here.
+  local forward_vlan_networks_out="213.13.16.0/20 194.65.46.0/23"
+  local mcast_net="239.255.255.250/32"
+
+  for vlan_net in $forward_vlan_networks_out; do
+    if has_rule $vlan_net 'nat'; then
+      logger "$0: NOT adding $LAN_NET -> $VLAN_IFACE:$vlan_net:$VLAN_IP POSTROUTING rule"
+    else
+      logger "$0: adding $LAN_NET -> $VLAN_IFACE:$vlan_net:$VLAN_IP POSTROUTING rule"
+      iptables --table nat -I POSTROUTING 1 --source $LAN_NET --destination $vlan_net --out-interface $VLAN_IFACE --jump SNAT --to-source $VLAN_IP
+    fi
+  done
+
+  # Prevent multicast packets from flooding the Wireless network.  ebtables requires build > 52!
+  ebtables -t nat -F  
+  for eb_iface in $LAN_IFACE $WLAN_IFACE; do 
+    ebtables --table nat -A OUTPUT -o $eb_iface -d Multicast -p 0x800 --ip-proto udp --ip-dst $mcast_net -j ACCEPT 
+  done
+  ebtables --table nat -A OUTPUT -o $LAN_IFACE -d Multicast -j DROP 
+}
+
+#=============================================================================
+
+logger "$0 event called with args: $@"
+
+source /jffs/scripts/custom/_net_functions
+init_config
+
+configure_meo_rules

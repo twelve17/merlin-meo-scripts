@@ -1,0 +1,40 @@
+#!/bin/sh
+
+#-----------------------------------------------------------------------------
+configure_meo_rules () {
+
+  # These are the networks whose packets we want to FORWARD INto our LOCAL network
+  local forward_vlan_networks_in="10.173.0.0/16 213.13.16.0/20 194.65.46.0/23"
+
+  local mcast_ip="224.0.0.0/4"
+  local mcast_port="1025"
+  local proto=udp
+
+  iptables -I INPUT 1 -p igmp -j ACCEPT
+
+  if has_rule $multicast_dest; then
+    logger "$0: NOT adding $VLAN_IFACE($proto) -> $mcast_ip:$mcast_port INPUT rule"
+  else
+    logger "$0: adding $VLAN_IFACE($proto) -> $mcast_ip:$mcast_port INPUT rule"
+    iptables -I INPUT 1 -i $VLAN_IFACE -p $proto --dst $mcast_ip --dport $mcast_port: -j ACCEPT
+  fi
+
+  for vlan_net in $forward_vlan_networks_in; do
+    if has_rule $vlan_net; then
+      logger "$0: NOT adding $VLAN_IFACE:$vlan_net -> $LAN_BR FORWARD rule"
+    else
+      logger "$0: adding $VLAN_IFACE:$vlan_net -> $LAN_BR FORWARD rule"
+      iptables -I FORWARD -i $VLAN_IFACE -o $LAN_BR -s $vlan_net -j ACCEPT
+    fi
+  done
+}
+
+#=========================================================================================
+
+logger "$0 event called with args: $@"
+
+source /jffs/scripts/custom/_net_functions
+init_config 
+
+configure_meo_rules
+

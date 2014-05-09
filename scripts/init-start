@@ -1,0 +1,5 @@
+#!/bin/sh 
+
+# Used by nat-start
+logger "$0: modprobing ebtables"
+modprobe ebtables

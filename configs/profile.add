@@ -1,0 +1,4 @@
+
+alias dir='ls'
+alias dira='ls -l'
+alias rdns='killall -HUP dnsmasq'
