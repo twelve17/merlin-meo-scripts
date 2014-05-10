@@ -191,6 +191,44 @@ Aside from the above scripts, this project has some config files that are read b
 1. dnsmasq.conf.add
   * Tells the LAN DHCP *server* to forward requests to "*.iptv.telecom.pt" to a DNS server running on the VLAN12 network instead of the default DNS server on VLAN10.
 
+TODO
+====
+
+## IGMP in Web UI vs. Script
+
+### IGMP Snooping
+
+If we use the script, the rules are:
+
+```
+ pkts bytes target     prot opt in     out     source               destination         
+    0     0 ACCEPT     udp  --  vlan12 any     anywhere             base-address.mcast.net/4 udp dpts:1025:65535 
+```
+
+If we use the web UI "Advanced Settings &#8594; LAN &#8594; IPTV &#8594; Enable efficient multicast forwarding (IGMP Snooping)" option, the rules are a little more broad:
+
+```
+ pkts bytes target     prot opt in     out     source               destination         
+    0     0 ACCEPT     igmp --  any    any     anywhere             base-address.mcast.net/4 
+    0     0 ACCEPT     udp  --  any    any     anywhere             base-address.mcast.net/4 udp dpt:!upnp 
+```
+
+# igmpproxy
+
+If we use the web UI "Advanced Settings &#8594; LAN &#8594; IPTV &#8594; Enable multicast routing (IGMP Proxy)" option, the resulting config runs on vlan10 and on br0 instead of vlan12:
+
+```
+# automagically generated from web settings
+quickleave
+
+phyint vlan10 upstream  ratelimit 0  threshold 1
+	altnet 0.0.0.0/0
+
+phyint br0 downstream  ratelimit 0  threshold 1
+```
+
+I think we want to stick with our own, script-based, config and igmpproxy launcher for this.
+
 Acknowledgements
 ================
 
