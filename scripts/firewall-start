@@ -12,7 +12,7 @@ configure_meo_rules () {
 
   iptables -I INPUT 1 -p igmp -j ACCEPT
 
-  if has_rule $multicast_dest; then
+  if has_rule $mcast_ip; then
     logger "$0: NOT adding $VLAN_IFACE($proto) -> $mcast_ip:$mcast_port INPUT rule"
   else
     logger "$0: adding $VLAN_IFACE($proto) -> $mcast_ip:$mcast_port INPUT rule"
