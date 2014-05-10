@@ -9,10 +9,10 @@ These scripts were tested with Merlin firmware version `374.41` running on a RT-
 
 To sum up the process outlined in [this very informative blog post](http://blog.zipleen.com/2010/10/how-to-make-meo-fiber-iptv-service-work.html), we need to do the following to get the various [MEO](http://meo.pt) services working: 
 
-* Make the router aware of MEO's vlans
+* Make the router aware of MEO's VLANs
 * Configure Internet access using PPPoE
 * Run a custom DHCP client to get the network configuration via VLAN12 (IPTV + VoIP)
-* Configure static routes, firewall/NAT rules, and DNS overrides For specific MEO-related IP ranges
+* Configure static routes, firewall/NAT rules, and DNS overrides for specific MEO-related IP ranges
 
 Most of the work is going to be done on the command line, *not* on the web admin UI, so you should feel comfortable SSH'ing into your router.  The scripts leverage the Merlin [user scripts](https://github.com/RMerl/asuswrt-merlin/wiki/User-scripts) as well as [custom config files](https://github.com/RMerl/asuswrt-merlin/wiki/Custom-config-files) mechanisms to accomplish the same goals as the zipleen versions.  Either way, use at your own risk, don't blame us if you brick your router, etc.  :)
 
@@ -53,11 +53,11 @@ Some routers allow you to replicate the network traffic from one port to another
 
 Port #8 is a special port (called the CPU internal port).  If you want the router to interact with any of the network traffic on the ports, it needs to be "plugged into" the CPU internal port.  If omitted, the router will pass along the traffic from one external port to another and otherwise not pay attention to it.
 
-So, `vlan12ports="0t 8"` means "Take the vlan12 network traffic and make it available to the router itself.", which then allows us to forward the signal to the LAN later.   The "t" in the "0t" means that the incoming signal to the WAN port is "trunked", which just means that the incoming signal will have tagged vlan traffic (e.g. multiple networks) in it.  
+So, `vlan12ports="0t 8"` means "Take the VLAN12 network traffic and make it available to the router itself.", which then allows us to forward the signal to the LAN later.   The "t" in the "0t" means that the incoming signal to the WAN port is "trunked", which just means that the incoming signal will have tagged vlan traffic (e.g. multiple networks) in it.  
 
 #### Alternative for VoIP
 
-Let's say you wish to keep using your Thomson router as the VoIP client.  You could forward *just* vlan12 to to one of the router's LAN ports:
+Let's say you wish to keep using your Thomson router as the VoIP client.  You could forward *just* VLAN12 to to one of the router's LAN ports:
 
 ```
 nvram set vlan12ports="0t 4t 8"
@@ -74,7 +74,7 @@ Internet
 
 On the web UI:
 
-* `Advanced Settings &#8594; Internet Connection`:
+* Advanced Settings &#8594; Internet Connection:
   * Basic Config
     * WAN Connection Type: "PPPoE"
     * Enable WAN, Enable NAT: "yes"
@@ -91,7 +91,18 @@ At this point, if you have the VLANs configured per the previous section, you sh
 Everything Else: Custom Scripts + Config
 -----------------------------------------
 
-The remainder of the configuration (custom DHCP client, routes, firewall config, IGMP proxy, DNS, etc.) is handled by the custom scripts in this project.  In order to use them, you should [enable JFFS support](https://github.com/RMerl/asuswrt-merlin/wiki/JFFS).  Once this is set up, you can simply clone this project and copy the 'scripts' and 'configs' folders to the `/jffs` folder on the router.  
+The remainder of the configuration (custom DHCP client, routes, firewall config, IGMP proxy, DNS, etc.) is handled by the custom scripts in this project.  In order to use them, you should [enable JFFS support](https://github.com/RMerl/asuswrt-merlin/wiki/JFFS) on the router.  Once this is set up, you can simply clone this project and copy the "scripts" and "configs" folders to the `/jffs` folder on the router.
+
+This assumes you don't have anything in your /jffs directory!  
+
+```
+$ git clone git@github.com:twelve17/merlin-meo-scripts.git
+$ scp -r merlin-meo-scripts user@my_router:/tmp/
+$ ssh user@my_router
+...
+$ cd /tmp/merlin-meo-scripts
+$ mv configs scripts /jffs/
+```
 
 The layout of the scripts is as follows:
 
@@ -114,9 +125,7 @@ The layout of the scripts is as follows:
       ...
 ```
 
-The scripts are written in such a way that they all call a shared function that lives in `scripts/custom/_net_functions`, which in turn reads `configs/custom/_net_config`.  I wanted to keep a lot of the configuration that might change between installations here.
-
-In the `configs/custom` directory, copy or rename `[_net_config.template](https://github.com/twelve17/merlin-meo-scripts/blob/tunlr-dyndns/configs/custom/_net_config.template)` to ` _net_config`.  This is where you specify the configuration for your particular router.  If you have a RT-x66U, chances are you may only have to worry about `LAN_NET` unless your LAN network is `192.168.1.x`.
+The scripts are written in such a way that they all call a shared function that lives in `scripts/custom/_net_functions`, which in turn reads `configs/custom/_net_config`.  I wanted to keep a lot of the configuration that might change between installations in one place.  So, in the `configs/custom` directory, copy or rename `_net_config.template` to `_net_config`.  This is where you specify the configuration for your particular router.  If you have a RT-x66U, chances are you may only have to worry about `LAN_NET` unless your LAN network is `192.168.1.x`.
 
 Make sure the scripts are executable, both in the main 'scripts' directory and also in 'scripts/custom'.
 
@@ -136,7 +145,7 @@ May  9 15:02:28 admin: /jffs/scripts/firewall-start: adding vlan12:194.65.46.0/2
 ```
 
 If everything went well, the web UI's "Network Map" page should report a "Connected" Internet status.
-On the command line, you should also see an vlan12 interface with an IP:
+On the command line, you should also see an VLAN12 interface with an IP:
 
 ```
 $ ip address show vlan12
@@ -172,10 +181,9 @@ Let's go through a typical lifecycle of events to explain how these scripts work
     * Configures static routes for MEO services (`route add -net ...`)
     * Saves the VLAN12 IP address to `/tmp/vlan_ip`
 3. The firewall filtering rules configured from the web UI have been applied.  Merlin calls `firewall-start`.
-  * firewall-start 
   * firewall-start configures iptables rules to allow MEO service traffic into the VLAN12 network 
 4. NAT rules (i.e. port forwards, etc. configured in the web UI) are been applied.  Merlin calls `nat-start` so we can add our own.
-  * nat-start configures iptables rules to nat-translate MEO service traffic from local LAN network to make it seem like it came from the VLAN12 network
+  * nat-start configures iptables rules to nat-translate MEO service traffic from local LAN network to make it seem like it came from the VLAN12 network (using the IP address in `/tmp/vlan_ip` created by `meo-post-dhcp-vlan-config`)
   * nat-start configures ebtables rules to block multicast traffic from spamming the wireless (WLAN) network
 
 Aside from the above scripts, this project has some config files that are read by the Merlin custom config process.  It basically looks for certain files in the `/jffs/configs`.  If any of the files end in ".add", the config is appended to the configuration file that Merlin creates on its own (from web UI settings).
@@ -205,7 +213,7 @@ nvram commit
 # reboot
 ```
 
-What the above command `vlan12ports="0t 2t 3"` says is, "Take the vlan12 network which is trunked on port 0 (WAN), and 
+What the above command `vlan12ports="0t 2t 3"` says is, "Take the VLAN12 network which is trunked on port 0 (WAN), and 
 duplicate as-is on port 2, and also duplicate it *not trunked* it on LAN port 3 (lack of "t"), which means that the duplicated traffic on port 3 will not be tagged, looking like "normal" traffic to a device plugged into that port.
 
 Plug in the Thomson router on port 2, then a computer on port 3.  
