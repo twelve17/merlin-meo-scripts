@@ -267,5 +267,5 @@ You should be able to 'ping' the Thomson's VLAN12 IP address.
 ## tunlr-dyndns Branch
 
 The `tunlr-dyndns` branch of this project contains a bit more complicated configuration.  The extra scripts/configs do the following:
-- Update a Tunlr-Clone server with an updated IP or provider domains.  See [tunlr-utils](https://github.com/twelve17/tunlr-utils).
-- Run a dynamic DNS client compatible with [DNS Made Easy](dnsmadeasy.net) (guess it wasn't *that* easy, huh).
+- Update a [Tunlr-Clone](https://github.com/corporate-gadfly/Tunlr-Clone) server with an updated IP or provider domains.  See [tunlr-utils](https://github.com/twelve17/tunlr-utils).
+- Run a dynamic DNS client compatible with [DNS Made Easy](http://www.dnsmadeasy.net) (guess it wasn't *that* easy, huh).
