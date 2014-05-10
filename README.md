@@ -16,8 +16,12 @@ To sum up the process outlined in [this very informative blog post](http://blog.
 
 Most of the work is going to be done on the command line, *not* on the web admin UI, so you should feel comfortable SSH'ing into your router.  The scripts leverage the Merlin [user scripts](https://github.com/RMerl/asuswrt-merlin/wiki/User-scripts) as well as [custom config files](https://github.com/RMerl/asuswrt-merlin/wiki/Custom-config-files) mechanisms to accomplish the same goals as the zipleen versions.  Either way, use at your own risk, don't blame us if you brick your router, etc.  :)
 
+Also, you may want to back up your /jffs directory before upgrading firmware, as its contents are not guaranteed to survive firmware upgrades!
+
 Configure VLANs
 ---------------
+
+These steps only need to be done once.  Their configuration will be saved to the router and survive reboots, etc.
 
 ### Internet VLAN
 
