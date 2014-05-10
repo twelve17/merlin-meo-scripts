@@ -10,7 +10,7 @@ These scripts were tested with Merlin firmware version `374.41` running on a RT-
 To sum up the process outlined in [this very informative blog post](http://blog.zipleen.com/2010/10/how-to-make-meo-fiber-iptv-service-work.html), we need to do the following to get the various [MEO](http://meo.pt) services working: 
 
 * Make the router aware of MEO's VLANs
-* Configure Internet access using PPPoE
+* Configure Internet access using PPPoE via VLAN10
 * Run a custom DHCP client to get the network configuration via VLAN12 (IPTV + VoIP)
 * Configure static routes, firewall/NAT rules, and DNS overrides for specific MEO-related IP ranges
 
