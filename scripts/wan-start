@@ -1,33 +1,6 @@
 #!/bin/sh
 
 #---------------------------------------------------------------------------
-update_tunlr_client () {
-  logger "$0: (background) starting update of remote tunlr config with updated client IP"
-  $CUSTOM_SCRIPT_DIR/tunlr-update-client 2>&1 &
-  logger "$0: (background) update is on its way"
-}
-
-#---------------------------------------------------------------------------
-# Update using dnsmadeeasy.com API
-#---------------------------------------------------------------------------
-update_dynamic_dns () {
-  if [ -n "$WAN_IP_ADDRESS" ]; then
-    logger "$0: using WAN IP address $WAN_IP_ADDRESS for dynamic DNS"
-    resp=`wget -q -c -O - $DYNDNS_URL`
-    rcode=$?
-    logger "$0: ddns response: $resp; result code: $rcode"
-    if [ $resp != "success" ] && [ $resp != "error-record-ip-same" ]; then
-       return 1
-    else
-       return 0
-    fi
-  else
-    logger "$0: WARNING: no WAN IP address available.  Not updating dynamic DNS."
-    return 1
-  fi
-}
-
-#---------------------------------------------------------------------------
 # Based on: 
 # https://github.com/zipleen/tomato-ddwrt-meo-iptv-scripts/blob/master/startiptv.sh
 #---------------------------------------------------------------------------
@@ -69,5 +42,5 @@ update_dynamic_dns && update_tunlr_client
 
 # This technically doesn't depend on the WAN interface, but I'm not sure 
 # there is a better hook for it than wan-start.
-configure_vlan # && start_igmp_proxy
+configure_vlan && start_igmp_proxy
 

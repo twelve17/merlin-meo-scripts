@@ -9,7 +9,6 @@
 
 # 1. To only have the vlan available to the router itself:
 # nvram set vlan12ports="0t 8" 
-#nvram set port4vlans=8
 #nvram set vlan12hwname=et0
 
 # 2. To have the vlan available to the router and on the fourth port, e.g
@@ -18,7 +17,7 @@
 
 # dupe trunked wan port on port 4
 nvram set vlan12ports="0t 4t 8"
-nvram set port4vlans=8
+nvram set port4vlans=12
 nvram set vlan12hwname=et0
 
 nvram commit
