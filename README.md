@@ -53,7 +53,7 @@ Some routers allow you to replicate the network traffic from one port to another
 
 Port #8 is a special port (called the CPU internal port).  If you want the router to interact with any of the network traffic on the ports, it needs to be "plugged into" the CPU internal port.  If omitted, the router will pass along the traffic from one external port to another and otherwise not pay attention to it.
 
-So, `vlan12ports="0t 8"` means "Take the VLAN12 network traffic and make it available to the router itself.", which then allows us to forward the signal to the LAN later.   The "t" in the "0t" means that the incoming signal to the WAN port is "trunked", which just means that the incoming signal will have tagged vlan traffic (e.g. multiple networks) in it.  
+So, `vlan12ports="0t 8"` means "Take the VLAN12 network traffic and make it available to the router itself.", which then allows us to forward the signal to the LAN later.   The "t" in the "0t" means that the incoming signal to the WAN port is "trunked", which just means that the incoming signal will have tagged VLAN traffic (e.g. multiple networks) in it.  
 
 #### Alternative for VoIP
 
