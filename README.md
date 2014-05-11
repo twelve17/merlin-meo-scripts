@@ -5,6 +5,8 @@ An adaptation of zipleen's [tomato-ddwrt-meo-iptv-scripts](https://github.com/zi
 
 These scripts were tested with Merlin firmware version `374.41` running on a RT-AC66U.
 
+Note that there are some [tutorials](http://forum.meo.pt/t5/Equipamentos-Internet/Tutorial-para-usar-outro-router-para-gerir-a-internet/m-p/18012#U18012) for using a Merlin router *alongside* the Thomson router.  The procedure outlined here is for using a Merlin-based router to **replace** the Thomson router altogether.
+
 ## Installation
 
 To sum up the process outlined in [this very informative blog post](http://blog.zipleen.com/2010/10/how-to-make-meo-fiber-iptv-service-work.html), we need to do the following to get the various [MEO](http://meo.pt) services working: 
